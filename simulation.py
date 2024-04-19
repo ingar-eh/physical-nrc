@@ -24,7 +24,7 @@ def Message(node_id, sigma_yi, sigma_zi, msg_rel):
 
 
 # ######## Experiment parameters #######
-x0 = np.array([6, 750, 16]) #np.array([12.3, 1069.7, 24.01])  # initial point
+x0 = np.array([6, 750, 16, 170]) #np.array([12.3, 1069.7, 24.01])  # initial point
 DONE = True                  # flag for ending the experiment
 IPM_cycle = 1               # number of interior-point-method cycles
 cycle = 0                    # counter of the cycles done
