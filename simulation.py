@@ -24,11 +24,11 @@ def Message(node_id, sigma_yi, sigma_zi, msg_rel):
 
 
 # ######## Experiment parameters #######
-x0 = np.array([6, 750, 16, 170]) #np.array([12.3, 1069.7, 24.01])  # initial point
+x0 = np.array([6, 800, 22, 170])
 DONE = True                  # flag for ending the experiment
-IPM_cycle = 1               # number of interior-point-method cycles
+IPM_cycle = 1                # number of interior-point-method cycles
 cycle = 0                    # counter of the cycles done
-bb = 5                   # steepness of the barrier functions
+bb = 5                       # steepness of the barrier functions
 
 
 # needed class for simulation
@@ -49,10 +49,10 @@ z0_prev = np.zeros((sim_spec.number_of_nodes, x0.size, x0.size))
 # ######## GENERATE NETWORK ##########
 is_graph_needed = True
 p = sim_spec.p  # probability of node connection
-with open(f"network_topology.csv") as file_name:
+'''with open(f"network_topology.csv") as file_name:
     graph_matrix = np.loadtxt(file_name, delimiter=",")
-network_graph = nx.from_numpy_matrix(graph_matrix)
-'''while is_graph_needed:
+network_graph = nx.from_numpy_array(graph_matrix)''' # endret matrix til array
+while is_graph_needed:
     network_graph = nx.gnp_random_graph(sim_spec.number_of_nodes, p)
     graph_matrix = nx.to_numpy_array(network_graph)
     is_graph_needed = False
@@ -62,7 +62,7 @@ network_graph = nx.from_numpy_matrix(graph_matrix)
             sum += graph_matrix[i][j]
         if sum == 0:
             is_graph_needed = True
-            break'''
+            break
 nx.draw(network_graph)
 plt.show()
 number_of_neighbors = [np.sum(graph_matrix[i]) for i in range(sim_spec.number_of_nodes)]
@@ -77,9 +77,10 @@ while DONE:
     for i in range(sim_spec.number_of_nodes):
         if cycle == 0:
             ###### MODIFY INITIAL CONDITION #####
-            x0_i[i, 0, 0] = x0[0] + np.random.randint(-1, 1)
-            x0_i[i, 0, 1] = x0[1] + np.random.randint(20, 50)
-            x0_i[i, 0, 2] = x0[2] + np.random.randint(3, 5)
+            x0_i[i, 0, 0] = x0[0] #+ np.random.randint(-2, 2)
+            x0_i[i, 0, 1] = x0[1] #+ np.random.randint(-30, 30)
+            x0_i[i, 0, 2] = x0[2] #+ np.random.randint(-3, 3)
+            x0_i[i, 0, 3] = x0[3] #+ np.random.randint(-10, 10)
 
         node = Node(i,
                     x0_i[i, cycle],
@@ -249,3 +250,20 @@ while DONE:
             print(f'agent[{i}]:{nodes[i].xi}\n')
         DONE = False
         print(f'IPM completed \n final cost: {f_total}')
+
+
+# write parameters and result to file
+fe = [nodes[i].ff for i in range(sim_spec.number_of_nodes)]
+xe = [nodes[i].xi for i in range(sim_spec.number_of_nodes)]
+x00 = [[x0_i[i, 0, j] for j in range(x0.size)] for i in range(sim_spec.number_of_nodes)]
+
+text = f'''x0: {x00}\nxe: {xe}\nfe: {fe}\nepsilon: {sim_spec.epsilon}\ndiv: {sim_spec.min_accepted_divergence}\nc: {sim_spec.c}\np: {sim_spec.p}\nmax_iter: {sim_spec.MAX_ITER}'''
+
+try:
+    with open('''specs.txt''', mode='x') as txt:
+        txt.write(text)
+except FileExistsError:
+    with open('''specs.txt''', mode='w') as txt:
+        txt.write(text)
+
+    
