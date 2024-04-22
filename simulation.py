@@ -4,7 +4,6 @@ from Node import *
 from async_simulation import *
 
 import autograd.numpy as np
-from autograd import jacobian
 import numpy as np
 import networkx as nx
 import SimulationSpecification

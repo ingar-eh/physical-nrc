@@ -15,24 +15,11 @@ class Node:
                  bb: float,
                  simulation_function_xtx_btx):
 
-        super(Node, self).__init__()
 
         self.node_id = node_id
         self.epsilon = epsilon
-        self.xi = np.array(x0) #+ np.random.uniform(-1, 1, x0.size)
+        self.xi = np.array(x0)
         self.bb = bb
-
-        # sea-water condition
-        if self.node_id == 0:
-            self.sea_condition = np.array([16, 30, 20, 300])
-        elif self.node_id == 1:
-            self.sea_condition = np.array([11, 40, 40, 300])
-        elif self.node_id == 2:
-            self.sea_condition = np.array([10, 38, 20, 200])
-        elif self.node_id == 3:
-            self.sea_condition = np.array([9, 35, 15, 150])
-        else:
-            self.sea_condition = np.array([12, 35, 30, 200])
 
         # list for storing evolution of signals
         self.all_calculated_xis = []
@@ -185,8 +172,6 @@ class Node:
 
         self.gi = np.subtract(np.matmul(self.hi, self.xi.transpose()),
                               jacobian(self.simulation_function_xtx_btx.get_fn)(self.xi, sea_cond=self.sea_condition, bb=self.bb))
-        '''self.gi = np.subtract(np.matmul(self.hi, self.xi.transpose()),
-                    self.simulation_function_xtx_btx.get_gradient_fn(self.xi, sea_cond=self.sea_condition, bb=self.bb))'''
 
         self.yi = self.yi + self.gi - self.gi_old
         self.zi = self.zi + self.hi - self.hi_old
