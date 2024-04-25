@@ -24,6 +24,7 @@ class Node:
         self.cfn = CostFunction
         self.ff = CostFunction.get_fn(self.xi, bb=self.bb)
 
+        self.neighboring_nodes = neighboring_nodes
         self.number_of_neighbors = neighboring_nodes.size
         self.minimum_accepted_divergence = minimum_accepted_divergence
 
@@ -52,10 +53,14 @@ class Node:
         print(f"transmitting data started!\n")
 
         self.yi = (1 / (self.number_of_neighbors + 1)) * self.yi
-        self.zi = self.zi / (self.number_of_neighbors + 1)
+        self.zi = (1 / (self.number_of_neighbors + 1)) * self.zi
 
         self.sigma_yi = self.sigma_yi + self.yi
         self.sigma_zi = self.sigma_zi + self.zi
+
+        # broadcast values to neighboring nodes
+        
+        # code goes here
 
         print(f"transmitting data ended!\n")
         return
@@ -64,21 +69,29 @@ class Node:
         """This method will handle the reception of data from neighbors. Using the yi and zi from the messages,
         the yi and zi would be updated by this method."""
         print(f"receiving data started!\n")
-        self.j = 0
 
-        # update old mass received
-        self.rho_zj_old[self.j] = self.rho_zj[self.j]
-        self.rho_yj_old[self.j] = self.rho_yj[self.j]
+        # receive data from transmitting node
 
+        # code goes here
 
-        self.rho_yj[self.j] = self.sigma_yi
-        self.rho_zj[self.j] = self.sigma_zi
+        # temporary data values
+        ID = self.neighboring_nodes(0)
+        sigma_yj = 0
+        sigma_zj = 0
+
+        # update old virtual mass received
+        self.rho_zj_old[ID] = self.rho_zj[ID]
+        self.rho_yj_old[ID] = self.rho_yj[ID]
+
+        # update virtual mass of neighbor
+        self.rho_yj[ID] = sigma_yj
+        self.rho_zj[ID] = sigma_zj
 
         # update estimate
-        self.yi = self.yi + self.rho_yj[self.j] - self.rho_yj_old[self.j]
-        self.zi = self.zi + self.rho_zj[self.j] - self.rho_zj_old[self.j]
+        self.yi = self.yi + self.rho_yj[ID] - self.rho_yj_old[ID]
+        self.zi = self.zi + self.rho_zj[ID] - self.rho_zj_old[ID]
 
-        print(f"Node ID: {self.node_id} -  Receiving data ended!\n")
+        print(f"Receiving data ended!\n")
         return
 
     def update_estimation(self, iter):
