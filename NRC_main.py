@@ -14,7 +14,7 @@ min_accepted_divergence = 0.02
 c = 0.00000001
 MAX_ITER = 10000
 IPM_cycle = 1
-bb = 10
+bb = 10                        # barrier method variable
 x0 = np.array([8, 800, 16, 7]) # initial point
 
 
