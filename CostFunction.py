@@ -9,7 +9,7 @@ class CostFunction:
         m = x[0]   # symbols per packet
         N = x[1]   # subcarriers
         M = x[2]   # modulation order
-        Ptx = x[3] # transmit power
+        P = x[3]   # transmit power in watts
 
         c = 1500        # speed of sound in water
         t = 12          # temperature
@@ -31,9 +31,9 @@ class CostFunction:
         Nmax = 2000
         Mmin = 2
         Mmax = 64  
-        PLR = 0.001  # max loss ratio
-        Pmin = 168.9 # min souself.rce level in dB re 1 µPa
-        Pmax = 188.9 # max souself.rce level in dB re 1 µPa
+        PLR = 0.001 # max loss ratio
+        Pmin = 5.5  # min power in watts (device specific)
+        Pmax = 65   # max power in watts (device specific)
 
         # absorbtion
         A1 = 1.03e-08 + 2.36e-10 * t - 5.22e-12 * t**2
@@ -55,13 +55,14 @@ class CostFunction:
         
         Nt = 17 - 30 * np.log10(fk)                                          # turbulence
         Ns = 40 + 20 * (s-0.5) + 26 * np.log10(fk) - 60 * np.log10(fk+0.03)  # shipping
-        Nw = 50 + 7.5 * np.sqrt(w) + 20 * np.log10(fk) - 40 * np.log(fk+0.4) # waves
+        Nw = 50 + 7.5 * np.sqrt(w) + 20 * np.log10(fk) - 40 * np.log10(fk+0.4) # waves
         Nth = -15 + 20 * np.log10(fk)                                        # thermal
   
-        noise = 10*np.log10(10**(Nt/10) + 10**(Ns/10) + 10**(Nw/10) + 10**(Nth/10)) + 10*np.log10(3000) - 170.8
+        noise = 20*np.log10(10**(Nt/10) + 10**(Ns/10) + 10**(Nw/10) + 10**(Nth/10)) + 10*np.log10(3000) - 170.8
         Pn = 10**(noise / 10)
 
         # calculate pl
+        Ptx = 10*np.log10(P) + 170.8                                                          # transmitted power
         Prx = 10**((Ptx - 20*np.log10(r) - absorbtion * r * 2 - 170.8) / 10)                  # received power
         SINR = Prx / (L*Prx + Pn)                                                             # signal to interference plus noise ratio
         pl = m * (N - n_x) * np.log2(M) * (0.2 * np.exp(-(3/(2 * (M - 1)) * SINR)))**(1 / Rc) # packet loss ratio

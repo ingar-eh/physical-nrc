@@ -15,7 +15,7 @@ c = 0.00000001
 MAX_ITER = 10000
 IPM_cycle = 1
 bb = 10
-x0 = np.array([8, 800, 16, 170]) # initial point
+x0 = np.array([8, 800, 16, 7]) # initial point
 
 
 # initialize the node as an object using the Node class
