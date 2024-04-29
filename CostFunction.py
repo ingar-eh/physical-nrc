@@ -18,7 +18,7 @@ class CostFunction:
         td = r / c      # transmission delay; seconds
         toh = 1e-3      # overhead delay; seconds
         L = 0.01        # energy spread threshold
-        B = 3000        # bandwith; Hz
+        B = 4000        # bandwith; Hz
         pc = 0.25       # cyclic prefix ratio
         Rc = 0.5        # coding rate
         n_x = 0         # non-data subcarriers
@@ -31,9 +31,9 @@ class CostFunction:
         Nmax = 2000
         Mmin = 2
         Mmax = 64  
-        PLR = 0.001 # max loss ratio
-        Pmin = 5.5  # min power; watts
-        Pmax = 65   # max power; watts
+        PLR = 0.1      # max packet loss ratio
+        Pmin = 16.26   # min power; SL
+        Pmax = 36.26   # max power; SL
 
         # absorbtion
         A1 = 1.03e-08 + 2.36e-10 * t - 5.22e-12 * t**2
@@ -47,7 +47,7 @@ class CostFunction:
         P2 = 1 - 10.3e-05 * d + 3.7e-09 * d**2
         P3 = 1 - 3.84e-05 * d + 7.57e-10 * d**2
 
-        absorbtion = A1 * P1 * (f1 * fk**2) / (f1**2 + fk**2) + A2 * P2 * (f2 * fk**2) / (f2**2 + fk**2) + A3 * P3 * fk**2 # dB re 1µPa/km
+        absorbtion = A1 * P1 * (f1 * fk**2) / (f1**2 + fk**2) + A2 * P2 * (f2 * fk**2) / (f2**2 + fk**2) + A3 * P3 * fk**2 # dB/km
 
         # noise
         s = 0 # shipping factor; between 0 and 1
@@ -62,21 +62,26 @@ class CostFunction:
         Pn = 10**(noise / 10)
 
         # calculate pl
-        Ptx = 10*np.log10(P) + 170.8                                                          # transmitted power; dB watts
-        Prx = 10**((Ptx - 20*np.log10(r) - absorbtion * r/1000 * 2 - 170.8) / 10)             # received power; watts
-        SINR = Prx / (L*Prx + Pn)                                                             # signal to interference plus noise ratio
-        pl = m * (N - n_x) * np.log2(M) * (0.2 * np.exp(-(3/(2 * (M - 1)) * SINR)))**(1 / Rc) # packet loss ratio
+        Ptx = P + 170.8                                                           # transmitted power; dB watts
+        Prx = 10**((Ptx - 20*np.log10(r) - absorbtion * r/1000 * 2 - 170.8) / 10) # received power; watts
+        SINR = Prx / (L*Prx + Pn)                                                 # signal to interference plus noise ratio
+        BER = 0.2 * np.exp(-(3/(2 * (M - 1)) * SINR))                             # bit error rate
+        pl = m * (N - n_x) * np.log2(M) * BER**(1 / Rc)                           # packet loss ratio
 
+        
+        # chance of successful bit per packet
+        Rp = (m * Rc * B * N * np.log2(M)) / (m * (1+pc) * N + B * (toh+td))
+        sb = Rp * np.log(1 - BER)
 
         # barrier functions / constraints
         bm = np.log(-(mmin - m)) + np.log(-(m - mmax))
         bN = np.log(-(n_x + Nmin - N)) + np.log(-(N - Nmax))
         bM = np.log(-(Mmin - M)) + np.log(-(M - Mmax))
         bpl = np.log(-(pl - PLR))
-        bPtx = np.log(-(Pmin - Ptx)) + np.log(-(Ptx - Pmax))
+        bPtx = np.log(-(Pmin - P)) + np.log(-(P - Pmax))
 
         # cost function
-        f = np.log(m*(1 + pc)*N + B*(toh+td)) - np.log(m) - np.log(Rc) - np.log(B) - np.log(N - n_x) - np.log(np.log2(M)) - np.log(1 - pl) \
+        f = np.log(m*(1 + pc)*N + B*(toh+td)) - np.log(m) - np.log(Rc) - np.log(B) - np.log(N - n_x) - np.log(np.log2(M)) - sb \
                     - 1 / bb * (bm + bN + bM + bpl + bPtx)
         
         return f

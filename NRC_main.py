@@ -9,13 +9,13 @@ node_id = 0
 neighboring_nodes = np.array([1, 2]) # ID list
 
 # parameters
-epsilon = 0.001
+epsilon = 0.005
 min_accepted_divergence = 0.02
 c = 0.00000001
 MAX_ITER = 10000
 IPM_cycle = 1
 bb = 10                        # barrier method variable
-x0 = np.array([8, 800, 16, 7]) # initial point
+x0 = np.array([8, 800, 16, 36]) # initial point
 
 
 # initialize the node as an object using the Node class
