@@ -57,6 +57,12 @@ def can_transmit(time):
     return (tt*node_id + 0.5*guard < time - tt*Nnodes*cycle < tt*(node_id+1) - 0.5*guard)
 
 
+def get_time():
+    date = datetime.now()
+    time = date.second + date.minute*60 + date.hour*3600
+    return time
+
+
 # outer loop
 for cycle in range(IPM_cycle):
     # reset convergence flag for the next iterations
@@ -68,7 +74,7 @@ for cycle in range(IPM_cycle):
         # transmission
         sdm.send_stop(session)
         
-        while not can_transmit(datetime.now().second):
+        while not can_transmit(get_time()):
             pass
 
         node.transmit_data()
