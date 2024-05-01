@@ -2,12 +2,20 @@ import CostFunction
 from Node import Node
 #import Node
 import autograd.numpy as np
+from datetime import datetime.now
 import socket
 import sdm
 
 # node specific
 node_id = 0
 neighboring_nodes = np.array([1]) # ID list
+
+# syncronizing parameters
+guard = 1 # interval of no one transmitting
+tt = 6    # time spent transmitting
+Nnodes = neighboring_nodes.size
+nu = 0
+time_old = 0
 
 # parameters
 epsilon = 0.5
@@ -45,6 +53,14 @@ node = Node(node_id,
             session)
 
 
+def update_nu(time):
+    global nu
+    if time < time_old:
+        nu = 0
+    if (time != 0) and (time % (tt*Nnodes) == 0):
+        nu += 1
+
+
 # outer loop
 for cycle in range(IPM_cycle):
     # reset convergence flag for the next iterations
@@ -55,11 +71,20 @@ for cycle in range(IPM_cycle):
     while not CONVERGENCE_FLAG:
         # transmission
         sdm.send_stop(session)
+        
         node.transmit_data()
         print("DONE TRANSMITTING")
-
-        # receive message and update state
-        ID, sigma_yj, sigma_zj = node.receive_data()
+                
+        time_old = time
+        time = now().second
+        update_nu(time)
+                
+        while not (tt*node_id + 0.5*guard < time - tt*Nnodes*nu < tt*(node_id+1) - 0.5*guard):
+            time_old = time
+            time = now().second
+            update_nu(time)
+            # receive message and update state
+            ID, sigma_yj, sigma_zj = node.receive_data()
 
         # Only update estimation if data received is valid
         if ID is not None and sigma_yj is not None and sigma_zj is not None:
