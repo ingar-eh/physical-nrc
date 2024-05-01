@@ -11,12 +11,9 @@ node_id = 0
 neighboring_nodes = np.array([1]) # ID list
 
 # syncronizing parameters
-guard = 1 # interval of no one transmitting
-tt = 6    # time spent transmitting
+guard = 1      # interval of no one transmitting
+tt = 6 + guard # time spent transmitting
 Nnodes = neighboring_nodes.size
-nu = 0
-time = 0
-time_old = 0
 listen_time = tt*Nnodes + guard*Nnodes
 
 # parameters
@@ -55,17 +52,9 @@ node = Node(node_id,
             session)
 
 
-def update_time(time, nu):
-    time_old = time
-    time = datetime.now()
-    if time < time_old:
-        nu = 0
-    if (time != 0) and (time % (tt*Nnodes) == 0):
-        nu += 1
-    return nu, time, time_old
-
-def can_transmit(time, nu):
-    return (tt*node_id + 0.5*guard < time - tt*Nnodes*nu < tt*(node_id+1) - 0.5*guard)
+def can_transmit(time):
+    cycle = time // (Nnodes*tt)
+    return (tt*node_id + 0.5*guard < time - tt*Nnodes*cycle < tt*(node_id+1) - 0.5*guard)
 
 
 # outer loop
@@ -79,8 +68,8 @@ for cycle in range(IPM_cycle):
         # transmission
         sdm.send_stop(session)
         
-        while not can_transmit(time, nu):
-            nu, time, time_old = update_time(time, nu)
+        while not can_transmit(datetime.now().second):
+            pass
 
         node.transmit_data()
         print("DONE TRANSMITTING")
