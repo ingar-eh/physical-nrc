@@ -2,7 +2,7 @@ import CostFunction
 from Node import Node
 #import Node
 import autograd.numpy as np
-from datetime import datetime.now
+from datetime import datetime
 import socket
 import sdm
 
@@ -15,7 +15,9 @@ guard = 1 # interval of no one transmitting
 tt = 6    # time spent transmitting
 Nnodes = neighboring_nodes.size
 nu = 0
+time = 0
 time_old = 0
+listen_time = tt*Nnodes + guard*Nnodes
 
 # parameters
 epsilon = 0.5
@@ -53,12 +55,17 @@ node = Node(node_id,
             session)
 
 
-def update_nu(time):
-    global nu
+def update_time(time, nu):
+    time_old = time
+    time = datetime.now()
     if time < time_old:
         nu = 0
     if (time != 0) and (time % (tt*Nnodes) == 0):
         nu += 1
+    return nu, time, time_old
+
+def can_transmit(time, nu):
+    return (tt*node_id + 0.5*guard < time - tt*Nnodes*nu < tt*(node_id+1) - 0.5*guard)
 
 
 # outer loop
@@ -72,19 +79,14 @@ for cycle in range(IPM_cycle):
         # transmission
         sdm.send_stop(session)
         
+        while not can_transmit(time, nu):
+            nu, time, time_old = update_time(time, nu)
+
         node.transmit_data()
         print("DONE TRANSMITTING")
                 
-        time_old = time
-        time = now().second
-        update_nu(time)
-                
-        while not (tt*node_id + 0.5*guard < time - tt*Nnodes*nu < tt*(node_id+1) - 0.5*guard):
-            time_old = time
-            time = now().second
-            update_nu(time)
+        ID, sigma_yj, sigma_zj = node.receive_data(listen_time)
             # receive message and update state
-            ID, sigma_yj, sigma_zj = node.receive_data()
 
         # Only update estimation if data received is valid
         if ID is not None and sigma_yj is not None and sigma_zj is not None:

@@ -134,7 +134,7 @@ class Node:
             self.socket.sendall(data_bytes)
         
 
-    def janus_receive(self):
+    def janus_receive(self, listen_time):
         def janus_receive_logic(queue):
             try:
                 ref_sample_number = 1024 * 16
@@ -207,7 +207,7 @@ class Node:
         receive_process.start()
 
         # Wait for the process to complete with a timeout of 10 seconds.
-        receive_process.join(timeout=20)
+        receive_process.join(timeout=listen_time)
 
         # If the process is still alive after the timeout, terminate it.
         if receive_process.is_alive():
@@ -228,10 +228,10 @@ class Node:
 
 
 
-    def receive_data(self):
+    def receive_data(self, listen_time):
         print(f"receiving data started!\n")
         # receive data from transmitting node
-        ID, sigma_yj, sigma_zj = self.janus_receive()
+        ID, sigma_yj, sigma_zj = self.janus_receive(listen_time)
 
         if ID is None:
             print("Failed to receive valid data.")
