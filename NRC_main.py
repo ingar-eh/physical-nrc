@@ -11,9 +11,9 @@ node_id = 0
 neighboring_nodes = np.array([1]) # ID list
 
 # syncronizing parameters
-guard = 1      # interval of no one transmitting
+guard = 2      # interval of no one transmitting
 tt = 6 + guard # time spent transmitting
-Nnodes = neighboring_nodes.size
+Nnodes = neighboring_nodes.size + 1
 listen_time = tt*Nnodes + guard*Nnodes
 
 # parameters
