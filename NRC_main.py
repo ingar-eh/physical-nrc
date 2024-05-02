@@ -3,6 +3,7 @@ from Node import Node
 #import Node
 import autograd.numpy as np
 from datetime import datetime
+from matplotlib import pyplot as plt
 import socket
 import sdm
 
@@ -101,3 +102,10 @@ for cycle in range(IPM_cycle):
     # update initial condition and steepness for the next cycle
     node.x0 = node.xi
     node.bb *= 1.5
+
+# print cost function graph
+
+print(f"fe: {node.evolution_costfun[-1]} xe: {node.all_calculated_xis[-1]}")
+fig, ax = plt.subplots(1, 2, figsize=(13, 8))
+ax[0].plot(node.evolution_costfun)
+ax[1].plot(node.all_calculated_xis)
