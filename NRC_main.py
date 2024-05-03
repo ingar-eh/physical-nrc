@@ -3,28 +3,30 @@ from Node import Node
 #import Node
 import autograd.numpy as np
 from datetime import datetime
-from matplotlib import pyplot as plt
 import socket
 import sdm
+from matplotlib import pyplot as plt
 
 # node specific
 node_id = 0
 neighboring_nodes = np.array([1]) # ID list
 
 # syncronizing parameters
-guard = 2      # interval of no one transmitting
+guard = 1      # interval of no one transmitting
 tt = 6 + guard # time spent transmitting
 Nnodes = neighboring_nodes.size + 1
-listen_time = tt*Nnodes + guard*Nnodes
+listen_time = tt*Nnodes + guard*Nnodes + 10
 
 # parameters
-epsilon = 0.5
+epsilon = 0.005
 min_accepted_divergence = 0.2
 c = 0.00000001
-MAX_ITER = 10000
+MAX_ITER = 50
 IPM_cycle = 1
 bb = 10
-x0 = np.array([1, 1250, 14, 28]) # initial point
+x0 = np.array([22, 1250, 14, 28]) # initial point
+
+success = 0
 
 ip = "127.0.0.1"
 port = 9998
@@ -73,29 +75,29 @@ for cycle in range(IPM_cycle):
     # inner loop
     while not CONVERGENCE_FLAG:
         # transmission
-        sdm.send_stop(session)
-        
+        #sdm.send_stop(session)
+        #sdm.expect(session, sdm.REPLY_STOP)
         while not can_transmit(get_time()):
             pass
 
         node.transmit_data()
-        print("DONE TRANSMITTING")
                 
         ID, sigma_yj, sigma_zj = node.receive_data(listen_time)
             # receive message and update state
 
         # Only update estimation if data received is valid
-        if ID is not None and sigma_yj is not None and sigma_zj is not None:
-            print("Iteration number: ", iter)
+        if ID is not None:
+            success = success + 1  
+            print("Successful update nr: ", success)
             node.update_estimation(iter)
         else:
-            print("Invalid data received, skipping update estimation.")
+            print("Invalid data received, total: ", (iter-success))
 
         # check if convergence is reached
         if node.has_converged() or iter >= MAX_ITER:
             CONVERGENCE_FLAG = True
             print(f"Reached convergence at iter:{iter}")
-            session.close()
+            #session.close()
         else:
             iter += 1
 
@@ -103,9 +105,8 @@ for cycle in range(IPM_cycle):
     node.x0 = node.xi
     node.bb *= 1.5
 
-# print cost function graph
-
-print(f"fe: {node.evolution_costfun[-1]} xe: {node.all_calculated_xis[-1]}")
-fig, ax = plt.subplots(1, 2, figsize=(13, 8))
+print(f'j0: {node.evolution_costfun[-1]} x: {node.all_calculated_xis[-1]}')
+fig, ax = plt.subplots(1, 2, figsize=(13,8))
 ax[0].plot(node.evolution_costfun)
 ax[1].plot(node.all_calculated_xis)
+plt.show()
